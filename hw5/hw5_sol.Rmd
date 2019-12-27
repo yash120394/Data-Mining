@@ -1,0 +1,455 @@
+---
+title: "B565_hw5"
+output: word_document
+---
+
+# 1
+
+```{r}
+# (a)
+
+## Reading the dataframe and subsetting column 'education' and 'vocabulary'
+df = read.csv("D:/Data Mining/hw5/Vocab.csv")
+df1 = df[,c("education","vocabulary")]
+
+## Creating feature vector X and response vector Y
+X1 = df1[,1]
+X2 = rep(1,length(X1))
+X = cbind(X1,X2)
+Y = df1[,2]
+
+head(X)
+
+# (b)
+
+## Solving for w and reporting values of a and b
+w = solve(t(X)%*%X)%*%(t(X)%*%Y)
+a = w[1]
+b = w[2]
+
+a
+b
+
+## predicting yhat from w
+yhat = X%*%w
+df1$pred_vocab = yhat
+head(df1)
+
+## plot fiited line for prediction 
+plot(X1,Y, xlab = "education level", ylab="vocabulary score")
+lines(X1,yhat)
+
+```
+
+\ (c) As seen from the plot, increase in education level has higher vocabulary score. So, yes people with more education tend to have larger vocabularies from predicted values.  
+
+\ (d) Since we got coefficient of X i.e. year of education as positive with a value of 0.33, so with unit increase in year of education, there will be 0.33 unit increase in voculabulary score on average. 
+
+
+
+# 2
+
+```{r}
+
+# (a)
+
+## Reading the dataframe and creating feature vector X and reponse vector Y
+df = read.csv("D:/Data Mining/hw5/ais.csv",stringsAsFactors=FALSE,sep=",")
+
+X1 = df[,c(3,4,5,6,7,8,9,10,11,12)]
+X2 = rep(1,nrow(X1))
+X = cbind(X1,X2)
+X = as.matrix(X)
+Y = df[,2]
+
+## Solving for w
+w = solve(t(X)%*%X)%*%t(X)%*%Y
+w
+
+# (b)
+
+## Computing error using predicted and actual values and summing up square of error to get sse
+yhat = X%*%w
+error = (Y-yhat)^2
+
+sse = sum(error)
+sse
+
+# (c)
+
+## Creating sum of square error by removing each feature from X matrix 
+sse1 = rep(0,11)
+for (i in 1:ncol(X)){
+X1 = X[,-c(i)]
+w1 = solve(t(X1)%*%X1)%*%t(X1)%*%Y
+yhat1 = X1%*%w1
+error1 = (Y-yhat1)^2
+
+sse1[i] = sum(error1)
+}
+sse1
+
+```
+
+\ As from the sse1, we can see that variable 'hc' ommision causes the greatest increase in sse. So, omitting 'hc' from X is causing the greatest harm. Hence, 'hc' variable is most important in predicting rcc. 
+
+
+
+# 3
+
+```{r}
+
+## Reading the data and plotting monthly beer sales 
+data(nottem)
+y = nottem 
+n = length(y)
+x = 1:n
+
+# (a)
+
+plot(x,y,type="b")
+
+# (b)
+
+## Creating feature vectors X using cos and sign function
+x1 = cos(2*pi*x/12)
+x2 = sin(2*pi*x/12)
+x3 = rep(1,n)
+
+X = cbind(x1,x2,x3)
+
+## Solving for w  and reporting values of a, b and c
+w = solve(t(X)%*%X)%*%t(X)%*%y
+a = w[1]
+b = w[2]
+c = w[3]
+a
+b
+c
+
+
+## Predicting yhat from w
+yhat = X%*%w
+
+## plotting actual and predicted values of monthly beer sales
+plot(x,y,type="b",col="green")
+lines(x,yhat,type="b",col="red")
+
+# (c)
+
+## Adding X in the feature vector
+X1 = cbind(x,x1,x2,x3)
+
+## Solving for w using new feature vector
+w1 = solve(t(X1)%*%X1)%*%t(X1)%*%y
+w1
+
+
+
+## Predicting yhat1 from new w
+yhat1 = X1%*%w1
+
+## Plotiing actual and 
+plot(x,y,type="b",col="green")
+lines(x,yhat1,type="b",col="red")
+
+```
+
+
+\ From the plot, we can see the trend as positive. Also, since the coeficient is positive for x, so with increase in month (x), the company is experiencing growth of 0.4% in sales.  
+
+
+# 4
+
+```{r}
+
+# (a)
+
+## Reading feature vector 1 and 2 and response vector 1 and 2
+## Splitting into train and test using first and second half of dataset
+
+x1 = as.matrix(read.table("D:/Data Mining/hw5/pred1.dat"))
+y1 = as.matrix(read.table("D:/Data Mining/hw5/resp1.dat"))
+
+x2 = as.matrix(read.table("D:/Data Mining/hw5/pred2.dat"))
+y2 = as.matrix(read.table("D:/Data Mining/hw5/resp2.dat"))
+
+x1_train = x1[1:(nrow(x1)/2),]
+y1_train = y1[1:(nrow(x1)/2),]
+
+x1_test = x1[((nrow(x1)/2)+1):nrow(x1),]
+y1_test = y1[((nrow(x1)/2)+1):nrow(x2),]
+
+
+## Solving for w for x1_train
+w1 = solve(t(x1_train)%*%x1_train)%*%t(x1_train)%*%y1_train
+w1
+
+x2_train = x2[1:(nrow(x2)/2),]
+y2_train = y2[1:(nrow(x2)/2),]
+
+x2_test = x2[((nrow(x2)/2)+1):nrow(x2),]
+y2_test = y2[((nrow(x2)/2)+1):nrow(x2),]
+
+## Solving for w for x2_train
+w2 = solve(t(x2_train)%*%x2_train)%*%t(x2_train)%*%y2_train
+w2
+
+# (b)
+## Predicting y for test set using w computed from training data
+## Computing SSE on test data
+yhat1_test = x1_test%*%w1
+error1 = (y1_test-yhat1_test)^2
+SSE1 = sum(error1)
+SSE1
+
+## Predicting y for test set using w computed from training data
+## Computing SSE on test data
+yhat2_test = x2_test%*%w2
+error2 = (y2_test-yhat2_test)^2
+SSE2 = sum(error2)
+SSE2
+
+```
+
+
+
+
+# 5 
+
+```{r}
+
+# (a)
+
+## Reading the 1st data set and spliting into test and train 
+x = as.matrix(read.table("D:/Data Mining/hw5/pred1.dat"))
+y = as.matrix(read.table("D:/Data Mining/hw5/resp1.dat"))
+
+x_train = x[1:(nrow(x)/2),]
+y_train = y[1:(nrow(x)/2),]
+
+x_test = x[((nrow(x)/2)+1):nrow(x),]
+y_test = y[((nrow(x)/2)+1):nrow(x),]
+
+## obtaining first best predictor variable using forward selection and reporting sum of squared error
+sse = rep(0,ncol(x_train))
+for (i in 1:ncol(x_train)){
+X = x_train[,c(i)]
+w = solve(t(X)%*%X)%*%t(X)%*%y_train
+yhat = X%*%w
+error = (y_train-yhat)^2
+
+sse[i] = sum(error)
+}
+
+v1 = which.min(sse)
+sse[v1]
+
+## obtaining the second best predictor variable and reporting sum of squared error
+sse1 = rep(0,ncol(x_train))
+for (i in 1:ncol(x_train)){
+if (i == v1) {
+sse1[i] = Inf
+} 
+else {
+X = x_train[,c(i,v1)]
+w = solve(t(X)%*%X)%*%t(X)%*%y_train
+yhat = X%*%w
+error = (y_train-yhat)^2
+sse1[i] = sum(error)
+}
+}
+
+v2 = which.min(sse1)
+sse1[v2]
+
+## obtaining the third best predictor variable and reporting sum of squared error
+sse2 = rep(0,ncol(x_train))
+for (i in 1:ncol(x_train)){
+if (i == v1 | i == v2) {
+sse2[i] = Inf
+} 
+else {
+X = x_train[,c(i,v1,v2)]
+w = solve(t(X)%*%X)%*%t(X)%*%y_train
+yhat = X%*%w
+error = (y_train-yhat)^2
+sse2[i] = sum(error)
+}
+}
+
+v3 = which.min(sse2)
+sse2[v3]
+
+## Reporting best three predictor variables index
+v1
+v2
+v3
+
+# 3 best predictor variables are v16,v21 and v47
+
+# (b)
+
+# with best predictors 
+
+x_train_new = x_train[,c(16,21,47)]
+x_test_new = x_test[,c(16,21,47)]
+
+## Computing prediction on test dataset using w_new
+w_new = solve(t(x_train_new)%*%x_train_new)%*%t(x_train_new)%*%y_train
+yhat_test_new = x_test_new%*%w_new
+
+## Computing SSE on test dataset
+error_new = (y_test-yhat_test_new)^2
+sse_new = sum(error_new)
+sse_new
+
+# with all predictors
+
+## Computing prediction on test dataset using w_new
+w = solve(t(x_train)%*%x_train)%*%t(x_train)%*%y_train
+yhat_test = x_test%*%w
+
+## Computing SSE on test dataset
+error = (y_test-yhat_test)^2
+sse = sum(error)
+sse
+
+```
+
+\ The approach with choosing only best variables using variable selection gives a better SSE. Choosing all variables will reduce the error in the training set but gives higher error rate in test set because of overfiiting. Only important variables should be used for prediction as it will generalize well in test set. 
+
+
+# 6 
+
+```{r}
+
+## Reading 2nd dataset and splitting into test and train
+x = as.matrix(read.table("D:/Data Mining/hw5/pred2.dat"))
+y = as.matrix(read.table("D:/Data Mining/hw5/resp2.dat"))
+
+x_train = x[1:(nrow(x)/2),]
+y_train = y[1:(nrow(x)/2),]
+
+x_test = x[((nrow(x)/2)+1):nrow(x),]
+y_test = y[((nrow(x)/2)+1):nrow(x),]
+
+
+# (a)
+
+## Intialising lambda = 20
+lambda = rep(20,ncol(x))
+lambda = diag(lambda)
+
+## SOlving for what using regularization and predicting on test dataset
+what = solve(t(x_train)%*%x_train+lambda)%*%t(x_train)%*%y_train
+
+
+yhat_test = x_test%*%what
+
+# (b)
+
+## computing SSE on test dataset using ridge regression
+
+error = (y_test-yhat_test)^2
+sse = sum(error)
+sse
+
+## Solving for what using plain regression and predicting on test dataset
+w = solve(t(x_train)%*%x_train)%*%t(x_train)%*%y_train
+
+yhat_test1 = x_test%*%w
+
+## computing SSE on test dataset using plain regression
+
+error1 = (yhat_test1-y_test)^2
+sse1 = sum(error1)
+sse1
+
+
+```
+
+
+\ As we can see the sum of squared error on test data is lower for ridge regression. Ridge regression is better in generalising the model because it penalises cooeficients of x so that it does not overfit. Since the cooeficients of X is penalised with lambda so the weightage to individual features will be reduced. Hence, will reduce overfitting. 
+ 
+
+# 6
+
+```{r}
+
+# (c)
+
+## Using lambda from 0 to 20 with increase in 0.5
+lambda = seq(0,20,by=0.5)
+sse = rep(0,length(lambda))
+
+
+## Computing SSE on test data set for each values of lambda
+for (i in 1:length(lambda)){
+lambda_matrix = diag(rep(lambda[i],ncol(x)))
+
+what = solve(t(x_train)%*%x_train+lambda_matrix)%*%t(x_train)%*%y_train
+yhat_test = x_test%*%what
+error = (y_test-yhat_test)^2
+sse[i] = sum(error)
+}
+
+## Plotting the SSE with lambda values as x 
+value = data.frame(cbind(lambda,sse))
+
+plot(value[2:nrow(value),],type="l")
+
+value[which.min(value$sse),]
+
+# we can see minimum sse is at lambda = 7
+
+## Using optimal lambda solve for w and compute sse on test dataset
+lambda_hat = diag(rep(7,ncol(x)))
+w = solve(t(x_train)%*%x_train+lambda_hat)%*%t(x_train)%*%y_train
+yhat = x_test%*%w
+error = (y_test-yhat)^2
+sse_min = sum(error)
+sse_min
+
+```
+
+
+
+# 7 
+
+```{r}
+
+## Reading timeseries data
+ts = as.matrix(read.table("D:/Data Mining/hw5/time_series.dat"))
+
+## Creating feature vector from ts as X(i-1) and X(i-2) and reponse vector y
+y = ts[3:nrow(ts),]
+x1 = ts[1:(nrow(ts)-2),]
+x2 = ts[2:(nrow(ts)-1),]
+
+X = cbind(x1,x2)
+
+## Solve for w
+w = solve(t(X)%*%X)%*%(t(X)%*%y)
+
+## Compute error using x(i) predicted and x(i) actual 
+yhat = X%*%w
+error = y-yhat
+
+## Reporting values of alpha1 and alpha2 which is cooeficients of X(i-1) and X(i-2) and variance of error which is e(i) 
+alpha1 = w[2]
+alpha2 = w[1]
+variance = var(error)
+
+alpha1 
+alpha2 
+variance
+
+
+```
+
+
+\ The estimated parameters $\alpha_1$ is 0.99, $\alpha_2$ is -0.93 and $\sigma^2$ is 0.0025
+
+
+

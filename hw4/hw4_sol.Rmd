@@ -1,0 +1,277 @@
+---
+title: "B565_hw4"
+output: word_document
+---
+
+# 1
+
+```{r}
+
+library(e1071)
+library(caret)
+
+# (a)
+# Reading naive bayes binary file and factorizing the variables
+df =  read.csv("D:/Data Mining/hw4/naive_bayes_binary.csv",colClasses = c('factor','factor','factor','factor','factor','factor','factor','factor','factor','factor','factor'))
+
+# Splitting the dataset into train and test
+n = nrow(df)
+train = df[1:(n/2),]
+test = df[((n/2)+1):n,]
+
+# function for prior probablities
+prior = function(class,vector)
+  return (p_prob = length(which(vector==class))/length(vector)) 
+
+# function for conditional probabilities
+cond_prob = function(class,value,v)
+  return (c_prob = length(which(v[,1]==value & v[,2] == class))/length(which(v[,2]==class)))
+
+# (b)
+# Calculating the prior and conditional probablities using training dataset and predicting the probabilities for each class using test data set
+
+test$pred_1 = 0
+test$pred_2 = 0
+test$pred_3 = 0
+
+for (i in 1:nrow(test))
+  test[i,12] = prior(1,train$V11)*cond_prob(1,test[i,1],train[,c(1,11)])*cond_prob(1,test[i,2],train[,c(2,11)])*cond_prob(1,test[i,3],train[,c(3,11)])*cond_prob(1,test[i,4],train[,c(4,11)])*cond_prob(1,test[i,5],train[,c(5,11)])*cond_prob(1,test[i,6],train[,c(6,11)])*cond_prob(1,test[i,7],train[,c(7,11)])*cond_prob(1,test[i,8],train[,c(8,11)])*cond_prob(1,test[i,9],train[,c(9,11)])*cond_prob(1,test[i,10],train[,c(10,11)])
+  
+for (i in 1:nrow(test))
+  test[i,13] = prior(2,train$V11)*cond_prob(2,test[i,1],train[,c(1,11)])*cond_prob(2,test[i,2],train[,c(2,11)])*cond_prob(2,test[i,3],train[,c(3,11)])*cond_prob(2,test[i,4],train[,c(4,11)])*cond_prob(2,test[i,5],train[,c(5,11)])*cond_prob(2,test[i,6],train[,c(6,11)])*cond_prob(2,test[i,7],train[,c(7,11)])*cond_prob(2,test[i,8],train[,c(8,11)])*cond_prob(2,test[i,9],train[,c(9,11)])*cond_prob(2,test[i,10],train[,c(10,11)])
+  
+for (i in 1:nrow(test))
+  test[i,14] = prior(3,train$V11)*cond_prob(3,test[i,1],train[,c(1,11)])*cond_prob(3,test[i,2],train[,c(2,11)])*cond_prob(3,test[i,3],train[,c(3,11)])*cond_prob(3,test[i,4],train[,c(4,11)])*cond_prob(3,test[i,5],train[,c(5,11)])*cond_prob(3,test[i,6],train[,c(6,11)])*cond_prob(3,test[i,7],train[,c(7,11)])*cond_prob(3,test[i,8],train[,c(8,11)])*cond_prob(3,test[i,9],train[,c(9,11)])*cond_prob(3,test[i,10],train[,c(10,11)])
+
+# Classify each vector to class having the maximum probablity 
+test$class = 0
+for (i in  1:nrow(test))
+  test[i,15] = which.max(apply(test[i,c(12,13,14)],MARGIN=2,max))
+  
+test$class = as.factor(test$class)
+
+# Creating the confusion matrix for test actual class and predicted class
+t = confusionMatrix(test$class,test$V11)
+t1 = as.table(t)
+t1
+
+```
+
+
+# 2
+
+```{r}
+# (a)
+
+library(rpart)
+library(rpart.plot)
+
+# reading the student performance dataset
+d1=read.table("D:/Data Mining/hw4/student-mat.csv",sep=";",header=TRUE)
+
+# creating a target variable using G3
+d1$y = ifelse(d1$G3>10,1,0)
+
+# subsetting the dataset removing G1,G2,and G3 variable
+df = subset(d1,select=-c(G1,G2,G3))
+
+set.seed(100)
+
+# Training the decision tree classifier using train dataset and checking the value of cp where relative error is minimum 
+model = rpart(formula = y~.,data = df,method="class",control=rpart.control(cp = 0))
+printcp(model)
+
+# Pruning the tree and plotting the best tree model
+modelp = prune(model,cp=0.021)
+rpart.plot(modelp)
+
+# (b)
+#Calculating the training error and generalisation error
+error_train = 0.47*0.59
+error_gen = 0.47*0.84
+error_train
+error_gen
+
+# Since the trees has been pruned in order to avoid overfiiting. For pruning, the split on non-terminal nodes has been penalised with cp = 0.021 and cross validated in order to get the minimum error rate on generalised dataset. The error rate on training and generalisation error would not be exact since we have trained on a different dataset and validated on different dataset but the error rate on validated dataset would be minimum given the optimal split penalty we have taken.     
+
+# (c)
+# calculating the most important variable 
+var_imp = modelp$variable.importance
+var_imp
+
+# 'failures' is the most important variable 
+
+# (d)
+# Repeating the steps above
+
+df1 = subset(d1,select=-c(G1,G2,y))
+
+set.seed(100)
+
+model1 = rpart(formula = G3~.,data = df1,method="anova",control=rpart.control(cp = 0))
+printcp(model1)
+
+modelp1 = prune(model1,cp=0.023)
+rpart.plot(modelp1)
+
+error_train1 = 20.93*0.75
+error_gen1 = 20.93*0.76
+error_train1
+error_gen1
+
+# Since the trees has been pruned in order to avoid overfiiting. For pruning, the split on non-terminal nodes has been penalised with cp = 0.023 and cross validated in order to get the minimum error rate on generalised dataset. The error rate on training and generalisation error would not be exact since we have trained on a different dataset and validated on different dataset but the error rate on validated dataset would be minimum given the optimal split penalty we have taken.
+
+var_imp1 = modelp1$variable.importance
+var_imp1
+
+# 'failures' is the most important variable 
+
+```
+
+
+
+# 4
+
+```{r}
+# (a)
+
+# Reading the dataset and factorizing the binary variables
+d1 =  read.csv("D:/Data Mining/hw4/strange_binary.csv",colClasses = c('factor','factor','factor','factor','factor','factor','factor','factor','factor','factor','factor'))
+
+# Creating target variable as binary and factorizing it
+d1$y = ifelse(d1$c=='good',1,0)
+d1$y = as.factor(d1$y)
+
+# subset columns 
+df = subset(d1,select=-c(c))
+
+# creating decision tree classifier using train dataset and printing cp of the model
+model = rpart(formula = y~.,data = df,method="class",control=rpart.control(cp = 0))
+printcp(model)
+
+# pruning the model at 3 split
+modelp = prune(model,cp=0.03)
+rpart.plot(modelp)
+
+# calculating the error rate on training and generalised dataset
+train_error = 0.32*0.82
+gen_error = 0.32*1.0938
+train_error
+gen_error
+
+# Calculating the important variables for prediction
+var_imp = modelp$variable.importance
+var_imp
+
+# It is not reasonable to assume error rate on generalised data set similar because at split n = 3, the x error is high. So for generalised dataset, the error rate will be higher.    
+
+# (b)
+# creating features which is sum of 0's and 1's respectively
+
+library("reshape2")
+d1$x.11 = rowSums(d1[,1:10]==0)
+d1$x.12 = rowSums(d1[,1:10]==1)
+
+# subsetting the dataset 
+df = subset(d1,select=-c(c))
+
+# Training the model using train dataset and plotting the cp and tree 
+model = rpart(formula = y~.,data = df,method="class",control=rpart.control(cp = 0))
+printcp(model)
+rpart.plot(model)
+
+# pruning the model using no more than 3 splits
+modelp = prune(model,cp=0.009375)
+rpart.plot(modelp)
+
+# calculating the error rate for train and generalised dataset which has reduced around 20%
+train_error1 = 0.32*0.7
+gen_error1 = 0.32*0.7
+ 
+# printing variable score
+var_imp = modelp$variable.importance
+var_imp
+```
+
+
+# 6
+
+```{r}
+library(stringr)
+library(data.table)
+
+
+df =  read.csv("D:/Data Mining/hw4/classification_accuracy.csv")
+df$error_dt = 100 - df$decision_tree 
+df$error_nb = 100 - df$naive_bayes 
+df$error_svm = 100 - df$svm 
+
+df1 = subset(df,select=-c(decision_tree,svm,naive_bayes))
+df1$error_dt = df1$error_dt/100 
+df1$error_nb = df1$error_nb/100 
+df1$error_svm = df1$error_svm/100 
+
+df1$dt_ci_l = df1$error_dt - qnorm(0.995)*((df1$error_dt*(1-df1$error_dt))/(df1$size))
+df1$dt_ci_h = df1$error_dt + qnorm(0.995)*((df1$error_dt*(1-df1$error_dt))/(df1$size))
+
+df1$nb_ci_l = df1$error_nb - qnorm(0.995)*((df1$error_nb*(1-df1$error_nb))/(df1$size))
+df1$nb_ci_h = df1$error_nb + qnorm(0.995)*((df1$error_nb*(1-df1$error_nb))/(df1$size))
+
+df1$svm_ci_l = df1$error_svm - qnorm(0.995)*((df1$error_svm*(1-df1$error_svm))/(df1$size))
+df1$svm_ci_h = df1$error_svm + qnorm(0.995)*((df1$error_svm*(1-df1$error_svm))/(df1$size))
+
+
+status = function(l1,h1,l2,h2,l3,h3) {
+  if ((h1<l2) & (h1<l3)) {
+    s = 'WW'
+  } else if (((l2<=h1 & h1<=h2)|(l2<=l1 & l1<=h2)) & (h1<l3)) {
+    s = 'DW'
+  } else if ((h1<l2) & ((l3<=h1 & h1<=h3)|(l3<=l1 & l1<=h3))) {
+    s = 'WD'
+  } else if ((h1<l2) & (l1>h3)) {
+    s = 'WL'
+  } else if ((l1>h2) & (h1<l3)) {
+    s = 'LW'
+  } else if (((l2<=h1 & h1<=h2)|(l2<=l1 & l1<=h2)) & (l1>h3)) {
+    s = 'DL'
+  } else if ((l1>h2) & ((l3<=h1 & h1<=h3)|(l3<=l1 & l1<=h3))) {
+    s = 'LD'
+  } else if (((l2<=h1 & h1<=h2)|(l2<=l1 & l1<=h2)) & ((l3<=h1 & h1<=h3)|(l3<=l1 & l1<=h3))) {
+    s = 'DD'
+  } else {
+    s = 'LL'
+  } 
+  s
+}
+
+df1$dt_s = NA
+for (i in 1:nrow(df))
+  df1[i,12] = status(df1[i,6],df1[i,7],df1[i,8],df1[i,9],df1[i,10],df1[i,11])
+
+df1$nb_s = NA
+for (i in 1:nrow(df))
+  df1[i,13] = status(df1[i,8],df1[i,9],df1[i,6],df1[i,7],df1[i,10],df1[i,11])
+
+df1$svm_s = NA
+for (i in 1:nrow(df))
+  df1[i,14] = status(df1[i,10],df1[i,11],df1[i,6],df1[i,7],df1[i,8],df1[i,9])
+
+df1$win_dt = str_count(df1$dt_s, "W")
+df1$draw_dt = str_count(df1$dt_s, "D")
+df1$loss_dt = str_count(df1$dt_s, "L")
+
+df1$win_nb = str_count(df1$nb_s, "W")
+df1$draw_nb = str_count(df1$nb_s, "D")
+df1$loss_nb = str_count(df1$nb_s, "L")
+
+df1$win_svm = str_count(df1$svm_s, "W")
+df1$draw_svm = str_count(df1$svm_s, "D")
+df1$loss_svm = str_count(df1$svm_s, "L")
+
+win = c(decisiontree = sum(df1$win_dt),naivebayes = sum(df1$win_nb),svm = sum(df1$win_svm))
+draw = c(decisiontree = sum(df1$draw_dt),naivebayes = sum(df1$draw_nb),svm = sum(df1$draw_svm))
+loss = c(decisiontree = sum(df1$loss_dt),naivebayes = sum(df1$loss_nb),svm = sum(df1$loss_svm))
+
+t = cbind(win,draw,loss)
+t
+```

@@ -1,0 +1,201 @@
+---
+title: "B563_hw3"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+
+```{r}
+x = runif(n=1000,min=-4,max=4)
+y = -x
+z = rep.int(1,1000)
+X = data.frame(x,y,z)
+
+cov = cov(X)
+svd = svd(cov)
+U = svd$u
+D = diag(svd$d)
+U
+D
+```
+
+## 2(a)
+
+```{r}
+library("mosaic")
+
+df =  read.csv("D:/Data Mining/hw3/Arrests.csv")
+head(df)
+
+t = table(df[,2],df[,3])
+t
+p_br = t[2,1]/sum(t[2,1]+t[2,2])
+p_br
+p_wr = t[2,2]/sum(t[2,1]+t[2,2])
+p_wr
+
+mosaicplot(table(df[,3],df[,2]),xlab="colour",ylab="released")
+
+
+```
+
+## 2(b)
+
+- It is evident that given employment status, colour and released are not independent. Heights of blacks and white given employment status and released status is not same.
+
+```{r}
+
+df1 = df[df$employed == 'Yes',]
+df2 = df[df$employed == 'No',]
+head(df1)
+
+
+t1 = table(df1[,3],df1[,2])
+t1
+t2 = table(df2[,3],df2[,2])
+t2
+
+tab1 = mosaicplot(t1)
+tab2 = mosaicplot(t2)
+
+```
+
+
+
+## 2(c)
+
+- It is evident that given checks, colour and released are not independent. Heights of blacks and white given check status and released status is not same.
+
+```{r}
+df_1 = df[df$checks == 0,]
+df_2 = df[df$checks == 1,]
+df_3 = df[df$checks == 2,]
+df_4 = df[df$checks == 3,]
+df_5 = df[df$checks == 4,]
+df_6 = df[df$checks == 5,]
+df_7 = df[df$checks == 6,]
+
+t1 = table(df1[,3],df1[,2])
+t1
+t2 = table(df2[,3],df2[,2])
+t2
+
+tab1 = mosaicplot(table(df_1[,3],df_1[,2]))
+tab2 = mosaicplot(table(df_2[,3],df_2[,2]))
+tab3 = mosaicplot(table(df_3[,3],df_3[,2]))
+tab4 = mosaicplot(table(df_4[,3],df_4[,2]))
+tab5 = mosaicplot(table(df_5[,3],df_5[,2]))
+tab6 = mosaicplot(table(df_6[,3],df_6[,2]))
+tab7 = mosaicplot(table(df_7[,3],df_7[,2]))
+
+```
+
+
+# 2(d) 
+- Given employment, we can see that whites are more probable to get released than blacks
+- For checks also, we can see that whites are more probable to get released than blacks except when check = 7
+- It is evident that higher arrest rate is there among blacks and data appears to be consistent with racial bias
+- Also, there could be external factors which may affect the higher arrest rate of blacks but it cannot be explained through mosaic plot 
+
+
+# 3(a)
+
+```{r}
+a = rexp(1000,1)
+plot(ecdf(a))
+
+
+```
+
+# 3(b)
+- The distribution is uniform
+
+```{r}
+b = ecdf(a)
+b1 = b(sort(a))
+plot(b1)
+
+hist(b1)
+
+
+```
+
+# 3(c)
+
+- Assumed two distribution, one of which is exponentially distributed and other random distributed with each has 10 datapoints
+- F(X<x(i)) = (number of X less than x(i))/1000 where i is the index
+- For any given index i , F(X<x(i)) will have same probablity irrespective of value of i 
+- Thus, P(x) will have same distribution irrespective of any values of i
+
+```{r}
+
+a1 = runif(1000)
+b2 = ecdf(a1)
+b3 = b2(sort(a1))
+plot(b3)
+
+d = density(b3)
+plot(d)
+
+d1 = density(b1)
+plot(d1)
+```
+
+
+## 4(a)
+- The different models of time series has different amplitude and frequency. 
+- Model 1: It has low frequency and high amplitude
+- Model 2: It has high frequency and low amplitude
+- Model 3: It has high frequency and high amplitude
+- Model 4 : It has low frequency and low  amplitude
+
+```{r}
+
+library(reshape2)
+library(ggplot2)
+library(forecast)
+library(fpp2)
+library(ggplot2)
+library(tidyr)
+
+df =  read.csv("D:/Data Mining/hw3/time_series.csv")
+head(df)
+
+df_t = t(df)
+cov = cov(df_t)
+svd = svd(cov)
+U = svd$u
+
+X = df_t%*%U[,1:4]
+
+ts.plot(X,gpars=list(col=rainbow(10)))
+
+
+
+```
+
+
+# 4(b)
+
+```{r}
+library("forecast")
+amp = apply(df, 1, max)
+
+df_t = t(df)
+
+freq = rep(NA,200)
+for (i in 1:ncol(df_t))
+  freq[i] = findfrequency(df_t[,i])
+
+plt = plot(freq,amp)
+plt
+
+```
+
+
+
+
